@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class PCA():
+class PCA:
     """
     PCA using the Singular-Value Decomposition
     """
@@ -10,7 +10,9 @@ class PCA():
         self.v = None
         self.s = None
         self.u = None
-
+        # m amount of rows
+        self._m = None
+        # n amount of columns
         self._n = None
         self._center = center
         self._scale = scale
@@ -24,8 +26,15 @@ class PCA():
         X = X.copy()
         X = self._preprocess(X)
 
-        self._n = X.shape[0]
+        self._m = X.shape[0]
+        self._n = X.shape[1]
         self.u, self.s, self.v = np.linalg.svd(X, full_matrices=False)
+
+        self.s = np.diag(self.s)
+
+        if self._n > self._m:
+            missing_cols = self._n - self._m
+            self.s = np.hstack((self.s, np.zeros((len(self.s), missing_cols))))
 
     def get_principal_components(self):
         return self.v
@@ -35,14 +44,14 @@ class PCA():
         Return projections of the original variables into the new coordinate system
         :return: Principal Component Scores
         """
-        return self.u @ np.diag(self.s)
+        return self.u @ self.s
 
     def get_explained_variance(self) -> np.ndarray:
         """
         Returns explained variance by the principal components
         :return: Explained Variance
         """
-        return (self.s ** 2) / np.sqrt(self._n - 1)
+        return (np.diagonal(self.s) ** 2) / np.sqrt(self._m - 1)
 
     def _preprocess(self, X: np.ndarray) -> np.ndarray:
         """
@@ -54,4 +63,4 @@ class PCA():
             X -= np.mean(X, axis=0)
         if self._scale:
             X /= np.std(X, axis=0)
-        return X
+            return X
