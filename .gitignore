@@ -252,4 +252,7 @@ cython_debug/
 #.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all
-/Blatt_2/data/
+# Exclude data directories
+*/data/
+# Exclude serialized numpy arrays
+*.npz
