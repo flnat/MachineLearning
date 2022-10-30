@@ -8,7 +8,7 @@ from skimage.util import crop
 
 
 def _standardize_image(img: np.ndarray):
-    img = crop(img, 60)
+    img = crop(img, (60, 60))
     img = resize(img, (32, 32))
     img = np.resize(img, 32 * 32)
     return img
@@ -28,7 +28,7 @@ def _read_images(img_dir: Path):
 
 def _split_images(images: list[np.ndarray]):
     random_sample = np.random.randint(len(images))
-
+    random_sample = 1
     train_images = images[:-random_sample]
     test_image = images[random_sample]
 
