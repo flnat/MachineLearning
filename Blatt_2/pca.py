@@ -4,6 +4,7 @@ import pandas as pd
 
 class PCA:
     def __init__(self, center: bool = True, standardize: bool = False) -> None:
+        self._m: int = 0
         self._n: int = 0
         self._center = center
         self._standardize = standardize
@@ -23,11 +24,15 @@ class PCA:
             raise ValueError("Non numeric data is not supported")
 
         x = x.copy()
-        self._n = x.shape[0]
-
+        self._m = x.shape[0]
+        self._n = x.shape[1]
         x = self._preprocess(x)
 
         self._u, self._s, self._vh = np.linalg.svd(x, full_matrices=False)
+        self._s = np.diag(self._s)
+        if self._n > self._m:
+            missing_cols = self._vh.shape[1] - self._s.shape[1]
+            self._s = np.hstack((self._s, np.zeros((len(self._s), missing_cols))))
         return
 
     def get_principal_components(self):
@@ -40,11 +45,11 @@ class PCA:
         :return: np.ndarray of the principal component scores
         """
 
-        # self._u @ np.diag(self._s) should be equivalent
-        return self._u * self._s
+        return self._u @ self._s
+        #return self._u * self._s
 
     def get_explained_variance(self):
-        return (self._s ** 2) / (self._n - 1)
+        return (self._s ** 2) / (self._m - 1)
 
     def _preprocess(self, x: np.ndarray) -> np.ndarray:
         if self._center:
