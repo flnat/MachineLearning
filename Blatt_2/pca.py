@@ -1,60 +1,66 @@
 import numpy as np
-import pandas as pd
 
 
 class PCA:
-    def __init__(self, center: bool = True, standardize: bool = False) -> None:
-        self._m: int = 0
-        self._n: int = 0
+    """
+    PCA using the Singular-Value Decomposition
+    """
+
+    def __init__(self, center: bool = True, scale: bool = True) -> None:
+        self.v = None
+        self.s = None
+        self.u = None
+        # m amount of rows
+        self._m = None
+        # n amount of columns
+        self._n = None
         self._center = center
-        self._standardize = standardize
-        self._u = None
-        self._s = None
-        self._vh = None
+        self._scale = scale
 
-    def fit(self, x: np.ndarray) -> None:
+    def fit(self, X: np.ndarray) -> None:
+        """
+        Performs SVD on the given Design Matrix
+        :param X: Design Matrix
+        :return:
+        """
+        X = X.copy()
+        X = self._preprocess(X)
 
-        # check if passed data is a pd.dataframe or series
-        # if yes cast to numpy.ndarray
-        if isinstance(x, (pd.DataFrame, pd.Series)):
-            x = x.values
+        self._m = X.shape[0]
+        self._n = X.shape[1]
+        self.u, self.s, self.v = np.linalg.svd(X, full_matrices=False)
 
-        # Check if numeric data has been passed
-        if not np.issubdtype(x.dtype, np.number):
-            raise ValueError("Non numeric data is not supported")
+        self.s = np.diag(self.s)
 
-        x = x.copy()
-        self._m = x.shape[0]
-        self._n = x.shape[1]
-        x = self._preprocess(x)
-
-        self._u, self._s, self._vh = np.linalg.svd(x, full_matrices=False)
-        self._s = np.diag(self._s)
         if self._n > self._m:
-            missing_cols = self._vh.shape[1] - self._s.shape[1]
-            self._s = np.hstack((self._s, np.zeros((len(self._s), missing_cols))))
-        return
+            missing_cols = self._n - self._m
+            self.s = np.hstack((self.s, np.zeros((len(self.s), missing_cols))))
 
     def get_principal_components(self):
-        return self._vh.T
+        return self.v
 
-    def get_principal_component_scores(self):
+    def get_principal_component_scores(self) -> np.ndarray:
         """
-        Calculates the principal component scores / projections on the basis vectors
-
-        :return: np.ndarray of the principal component scores
+        Return projections of the original variables into the new coordinate system
+        :return: Principal Component Scores
         """
+        return self.u @ self.s
 
-        return self._u @ self._s
-        #return self._u * self._s
+    def get_explained_variance(self) -> np.ndarray:
+        """
+        Returns explained variance by the principal components
+        :return: Explained Variance
+        """
+        return (np.diagonal(self.s) ** 2) / np.sqrt(self._m - 1)
 
-    def get_explained_variance(self):
-        return (self._s ** 2) / (self._m - 1)
-
-    def _preprocess(self, x: np.ndarray) -> np.ndarray:
+    def _preprocess(self, X: np.ndarray) -> np.ndarray:
+        """
+        Apply Z-standardization as preprocessing
+        :param X: Design-Matrix
+        :return: Z-standardized Design Matrix
+        """
         if self._center:
-            x -= np.mean(x, axis=0)
-        if self._standardize:
-            x /= np.std(x, axis=0)
-
-        return x
+            X -= np.mean(X, axis=0)
+        if self._scale:
+            X /= np.std(X, axis=0)
+            return X
