@@ -3,12 +3,15 @@ from scipy.stats import norm
 from typing import Optional
 
 
-class GaussianNaiveBayes():
+class GaussianNaiveBayes:
     """
-    Naive Bayes Classifier under the assumption of gaussian distributed classes
+    Naive Bayes Classifier under the assumption of gaussian distributed features
     """
 
     def __init__(self, priors: Optional[np.ndarray] = None) -> None:
+        """
+        :param priors: Array of the shape (n_classes,) with the prior probabilities of the classes
+        """
         # Array of unique Classes in the training Data
         self.classes = None
         # Absolute Frequency of the training classes
@@ -29,14 +32,16 @@ class GaussianNaiveBayes():
     def fit(self, X: np.ndarray, Y: np.ndarray) -> None:
         """
         Fit training data to the Naive Bayes Classifier
+        :param X: Training Features
+        :param Y: Training Labels
         """
-        if self.priors is None:
-            self.priors = self._compute_priors(Y)
-
         # Transform labels into 1d Vector
         if Y.ndim != 1:
             Y = Y.flatten()
         self.classes, self.class_counts = np.unique(Y, return_counts=True)
+        if self.priors is None:
+            self.priors = self.class_counts / len(Y)
+
         self.n_features, self.n_classes = X.shape[1], len(self.classes)
         # Initialize array of the estimated means & standard deviations in the shape (n_features, n_classes)
         self.means = np.ones((self.n_features, self.n_classes))
@@ -74,43 +79,3 @@ class GaussianNaiveBayes():
             predictions[idx] = self.classes[np.argmax(row)]
 
         return predictions
-
-    @staticmethod
-    def _compute_priors(Y: np.ndarray) -> np.ndarray[float]:
-        classes, counts = np.unique(Y, return_counts=True)
-        relative_frequencies = counts / len(Y)
-        return relative_frequencies
-
-
-# if __name__ == "__main__":
-#     from face_vectorizer import FaceVectorizer
-#     from pca import PCA
-#
-#     train_images, test_images, train_labels, test_labels = FaceVectorizer(
-#         "./data/faces_in_the_wild/lfw_funneled/").get_images()
-#     pca = PCA()
-#     pca.fit(train_images)
-#
-#     eigenfaces = pca.v @ pca.s
-#     test_projections = test_images @ eigenfaces[0:7, :].T
-#     train_projections = train_images @ eigenfaces[0:7, :].T
-#
-#     train_labels[train_labels != "George_W_Bush"] = -1
-#     train_labels[train_labels == "George_W_Bush"] = 1
-#
-#     test_labels[test_labels != "George_W_Bush"] = -1
-#     test_labels[test_labels == "George_W_Bush"] = 1
-#
-#     nb = GaussianNaiveBayes()
-#     nb.fit(train_projections, train_labels)
-
-
-if __name__ == "__main__":
-    from sklearn.datasets import load_iris
-
-    x, y = load_iris(return_X_y=True, as_frame=True)
-
-    nb = GaussianNaiveBayes()
-    nb.fit(x.values, y.values.reshape(-1))
-    predictions = nb.predict(x.values)
-    print(predictions)
