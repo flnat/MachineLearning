@@ -43,7 +43,7 @@ class GaussianNaiveBayes:
             self.priors = self.class_counts / len(Y)
 
         self.n_features, self.n_classes = X.shape[1], len(self.classes)
-        # Initialize array of the estimated means & standard deviations in the shape (n_features, n_classes)
+        # Initialize arrays for the estimated means & standard deviations in the shape (n_features, n_classes)
         self.means = np.ones((self.n_features, self.n_classes))
         self.standard_deviations = np.ones((self.n_features, self.n_classes))
 
