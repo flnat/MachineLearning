@@ -32,8 +32,7 @@ class PCA:
 
         self.s = np.diag(self.s)
 
-        if True:
-        # if self._n > self._m:
+        if self._n > self._m:
             missing_cols = self.v.shape[1] - self.s.shape[1]
             missing_rows = self.u.shape[0] - self.s.shape[0]
             self.s = np.hstack((self.s, np.zeros((self.s.shape[0], missing_cols))))
