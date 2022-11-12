@@ -28,13 +28,16 @@ class PCA:
 
         self._m = X.shape[0]
         self._n = X.shape[1]
-        self.u, self.s, self.v = np.linalg.svd(X, full_matrices=False)
+        self.u, self.s, self.v = np.linalg.svd(X, full_matrices=True)
 
         self.s = np.diag(self.s)
 
-        if self._n > self._m:
-            missing_cols = self._n - self._m
-            self.s = np.hstack((self.s, np.zeros((len(self.s), missing_cols))))
+        if True:
+        # if self._n > self._m:
+            missing_cols = self.v.shape[1] - self.s.shape[1]
+            missing_rows = self.u.shape[0] - self.s.shape[0]
+            self.s = np.hstack((self.s, np.zeros((self.s.shape[0], missing_cols))))
+            self.s = np.vstack((self.s, np.zeros((missing_rows, self.s.shape[1]))))
 
     def get_principal_components(self):
         return self.v
