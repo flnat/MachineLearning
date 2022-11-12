@@ -6,64 +6,12 @@ import numpy as np
 from skimage.io import imread
 from skimage.transform import resize
 from skimage.util import crop
-
-
-def _standardize_image(img: np.ndarray):
-    img = crop(img, (60, 60))
-    img = resize(img, (32, 32))
-    img = np.resize(img, 32 * 32)
-    return img
-
-
-def _read_images(img_dir: Path):
-    imgs = []
-    for img in img_dir.iterdir():
-        if not img.is_file():
-            continue
-        imgs.append(
-            _standardize_image(
-                imread(img, as_gray=True)))
-
-    return imgs
-
-
-def _split_images(images: list[np.ndarray]):
-    random_sample = np.random.randint(len(images))
-    random_sample = 1
-    train_images = images[:-random_sample]
-    test_image = images[random_sample]
-
-    return train_images, test_image
-
-
-def _get_paths_with_70_pictures():
-    persons = []
-    # Get all Directory of all persons with n_images > 70
-    for item in Path("./data/faces_in_the_wild/lfw_funneled/").iterdir():
-        if item.is_dir():
-            if len(os.listdir(item)) >= 70:
-                persons.append(item)
-    return persons
-
-
-def get_images():
-    persons = _get_paths_with_70_pictures()
-    train_images, test_images, train_labels, test_labels = [], [], [], []
-    for person in persons:
-        imgs = _read_images(person)
-        train, test = _split_images(imgs)
-
-        train_images.extend(train)
-        test_images.append(test)
-
-        train_labels.extend([person.stem] * len(train))
-        test_labels.append(person.stem)
-
-    return np.vstack(train_images), np.vstack(test_images), np.vstack(train_labels), np.vstack(test_labels)
+from sklearn.model_selection import train_test_split
 
 
 class FaceVectorizer():
-    def __init__(self, path: Union[str, Path], min_images=70, crop_size=(60, 60), new_size=32):
+    def __init__(self, path: Union[str, Path], min_images=70, crop_size=(60, 60), new_size=32,
+                 test_size: int | float = 1, random_seed=42):
         if isinstance(path, str):
             self._path = Path(path)
         else:
@@ -71,6 +19,8 @@ class FaceVectorizer():
         self._min_images = min_images
         self._crop_size = crop_size
         self._new_size = new_size
+        self._test_size = test_size
+        self._random_seed = random_seed
 
     def _standardize_image(self, img: np.ndarray):
         img = crop(img, self._crop_size)
@@ -78,13 +28,11 @@ class FaceVectorizer():
         img = np.resize(img, self._new_size * self._new_size)
         return img
 
-    @staticmethod
-    def _split_images(images: list[np.ndarray]):
-        random_sample = 1
-        train_images = images[:-random_sample]
-        test_image = images[random_sample]
+    def _split_images(self, images: list[np.ndarray]):
 
-        return train_images, test_image
+        train_images, test_images = train_test_split(images, test_size=self._test_size, random_state=self._random_seed)
+
+        return train_images, test_images
 
     def _read_images(self, person):
         images = []
@@ -94,7 +42,7 @@ class FaceVectorizer():
             if not img.is_file():
                 continue
             images.append(
-                _standardize_image(
+                self._standardize_image(
                     imread(img, as_gray=True)))
         return images
 
@@ -115,9 +63,9 @@ class FaceVectorizer():
             train, test = self._split_images(images)
 
             train_images.extend(train)
-            test_images.append(test)
+            test_images.extend(test)
 
             train_labels.extend([person.stem] * len(train))
-            test_labels.append(person.stem)
+            test_labels.extend([person.stem] * len(test))
 
         return np.vstack(train_images), np.vstack(test_images), np.vstack(train_labels), np.vstack(test_labels)
