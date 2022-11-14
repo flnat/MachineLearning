@@ -32,11 +32,11 @@ class PCA:
 
         self.s = np.diag(self.s)
 
-        if self._n > self._m:
-            missing_cols = self.v.shape[1] - self.s.shape[1]
-            missing_rows = self.u.shape[0] - self.s.shape[0]
-            self.s = np.hstack((self.s, np.zeros((self.s.shape[0], missing_cols))))
-            self.s = np.vstack((self.s, np.zeros((missing_rows, self.s.shape[1]))))
+        # if self._n > self._m:
+        missing_cols = self.v.shape[1] - self.s.shape[1]
+        missing_rows = self.u.shape[0] - self.s.shape[0]
+        self.s = np.hstack((self.s, np.zeros((self.s.shape[0], missing_cols))))
+        self.s = np.vstack((self.s, np.zeros((missing_rows, self.s.shape[1]))))
 
     def get_principal_components(self):
         return self.v
@@ -65,4 +65,4 @@ class PCA:
             X -= np.mean(X, axis=0)
         if self._scale:
             X /= np.std(X, axis=0)
-            return X
+        return X

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 
 class FaceVectorizer():
-    def __init__(self, path: Union[str, Path], min_images=70, crop_size=(60, 60), new_size=32,
+    def __init__(self, path: Union[str, Path], min_images=70, crop_size=80, new_size=32,
                  test_size: int | float = 1, random_seed=42):
         if isinstance(path, str):
             self._path = Path(path)

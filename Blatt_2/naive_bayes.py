@@ -65,17 +65,17 @@ class GaussianNaiveBayes:
             raise ValueError("Estimator has not yet been fitted!")
 
         output_size = (len(X), self.n_classes)
-        y_hat = np.ones(output_size)
+        likelihoods = np.ones(output_size)
 
         for idx, row in enumerate(X):
             for clazz in range(self.n_classes):
                 for feature in range(self.n_features):
-                    y_hat[idx, clazz] *= norm.pdf(row[feature], self.means[feature, clazz],
-                                                  self.standard_deviations[feature, clazz])
-            y_hat[idx, :] *= self.priors
+                    likelihoods[idx, clazz] *= norm.pdf(row[feature], self.means[feature, clazz],
+                                                        self.standard_deviations[feature, clazz])
+            likelihoods[idx, :] *= self.priors
 
         predictions = np.zeros(len(X))
-        for idx, row in enumerate(y_hat):
+        for idx, row in enumerate(likelihoods):
             predictions[idx] = self.classes[np.argmax(row)]
 
         return predictions
